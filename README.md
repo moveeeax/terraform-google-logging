@@ -8,7 +8,7 @@ match a filter to a Cloud Storage bucket, BigQuery dataset or Pub/Sub topic.
 
 ```hcl
 module "logging" {
-  source = "github.com/cybercapybara/terraform-google-logging"
+  source = "github.com/moveeeax/terraform-google-logging"
 
   project_id  = var.project_id
   name        = "warnings-to-gcs"
