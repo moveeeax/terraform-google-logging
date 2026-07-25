@@ -19,6 +19,20 @@ resource "google_storage_bucket" "logs" {
   name                        = "${var.project_id}-log-archive"
   location                    = var.region
   uniform_bucket_level_access = true
+
+  # A log archive must never be reachable anonymously.
+  public_access_prevention = "enforced"
+
+  # Exported logs otherwise accumulate forever. Pick a window that matches your
+  # retention obligations.
+  lifecycle_rule {
+    condition {
+      age = 400
+    }
+    action {
+      type = "Delete"
+    }
+  }
 }
 
 module "logging" {
@@ -28,6 +42,10 @@ module "logging" {
   name        = "example-sink"
   destination = "storage.googleapis.com/${google_storage_bucket.logs.name}"
   filter      = "severity >= WARNING"
+
+  # grant_writer_identity_permission defaults to true, so the module also binds
+  # roles/storage.objectCreator on the bucket above for the sink's writer
+  # identity. Without that binding the sink applies cleanly and exports nothing.
 }
 
 variable "project_id" {
@@ -43,4 +61,8 @@ variable "region" {
 
 output "writer_identity" {
   value = module.logging.writer_identity
+}
+
+output "writer_identity_permission_granted" {
+  value = module.logging.writer_identity_permission_granted
 }
