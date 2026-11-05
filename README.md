@@ -14,7 +14,7 @@ in the console, and not a single entry is ever written. See
 
 ```hcl
 module "logging" {
-  source = "github.com/moveeeax/terraform-google-logging"
+  source = "github.com/moveeeax/terraform-google-logging?ref=v1.0.0"
 
   project_id  = var.project_id
   name        = "warnings-to-gcs"
