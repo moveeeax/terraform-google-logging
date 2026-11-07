@@ -92,12 +92,12 @@ variable "bigquery_use_partitioned_tables" {
   description = <<-EOT
     For BigQuery destinations, whether Cloud Logging writes to partitioned
     tables instead of one dated table per day (syslog_20170523). Defaults to
-    true. Ignored for other destinations. Changing it on an existing sink makes
+    false, the API's own default. Ignored for other destinations. Changing it on an existing sink makes
     new entries land in differently named tables, so queries over the dataset
     have to follow.
   EOT
   type        = bool
-  default     = true
+  default     = false
   nullable    = false
 }
 

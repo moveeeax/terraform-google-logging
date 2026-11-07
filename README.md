@@ -50,10 +50,11 @@ The `exclusions` map key becomes the exclusion name. The exclusions belong to
 this sink and only filter what it exports.
 `disabled = true` keeps an exclusion in place without excluding anything.
 
-For BigQuery destinations the sink writes to partitioned tables by default
-(`bigquery_use_partitioned_tables = true`). The provider describes the
-alternative as one dated table per day (`syslog_20170523`); with partitioned
-tables the date suffix is gone and queries need partition syntax instead.
+For BigQuery destinations, `bigquery_use_partitioned_tables = true` makes the
+sink write to partitioned tables. The default is `false`, which keeps the API's
+behaviour of one dated table per day (`syslog_20170523`), so existing sinks
+plan no change. With partitioned tables the date suffix is gone and queries
+need partition syntax instead; new sinks usually want `true`.
 The setting is ignored for other destinations.
 
 A runnable example lives in [`examples/basic`](examples/basic).
@@ -100,7 +101,7 @@ to all of them and cannot be revoked for one sink alone.
 | `name`                             | Name of the log sink.                                                      | `string` | n/a                      |   yes    |
 | `destination`                      | Destination URI for exported logs. Validated against the four known forms. | `string` | n/a                      |   yes    |
 | `filter`                           | Advanced log filter selecting entries. Empty exports all logs.             | `string` | `""`                     |    no    |
-| `unique_writer_identity`           | Whether to create a dedicated writer identity.                             | `bool`   | `true`                   |    no    |
+| `unique_writer_identity`           | Whether to create a dedicated writer identity.                             | `bool`   | `false`                  |    no    |
 | `grant_writer_identity_permission` | Whether to grant the writer identity its role on the destination.          | `bool`   | `true`                   |    no    |
 | `description`                      | Description of the log sink.                                               | `string` | `"Managed by Terraform"` |    no    |
 | `exclusions`                       | Entries to drop before export, keyed by exclusion name.                    | `map`    | `{}`                     |    no    |

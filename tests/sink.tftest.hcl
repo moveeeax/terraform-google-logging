@@ -230,26 +230,26 @@ run "rejects_empty_exclusion_filter" {
 
 # --- BigQuery options ---------------------------------------------------------
 
-run "bigquery_destination_uses_partitioned_tables_by_default" {
+run "bigquery_destination_keeps_dated_tables_by_default" {
   variables {
     destination = "bigquery.googleapis.com/projects/other-project/datasets/log_archive"
   }
 
   assert {
-    condition     = google_logging_project_sink.this.bigquery_options[0].use_partitioned_tables == true
-    error_message = "BigQuery sinks must default to partitioned tables."
+    condition     = google_logging_project_sink.this.bigquery_options[0].use_partitioned_tables == false
+    error_message = "BigQuery sinks must default to dated tables, the API default."
   }
 }
 
-run "bigquery_partitioned_tables_can_be_turned_off" {
+run "bigquery_partitioned_tables_can_be_turned_on" {
   variables {
     destination                     = "bigquery.googleapis.com/projects/other-project/datasets/log_archive"
-    bigquery_use_partitioned_tables = false
+    bigquery_use_partitioned_tables = true
   }
 
   assert {
-    condition     = google_logging_project_sink.this.bigquery_options[0].use_partitioned_tables == false
-    error_message = "bigquery_use_partitioned_tables = false must reach the sink."
+    condition     = google_logging_project_sink.this.bigquery_options[0].use_partitioned_tables == true
+    error_message = "bigquery_use_partitioned_tables = true must reach the sink."
   }
 }
 

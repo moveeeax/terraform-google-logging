@@ -13,14 +13,10 @@ All notable changes to this module are documented here. The format follows
   `exclusions` blocks.
 - `bigquery_use_partitioned_tables` input, rendered as
   `bigquery_options.use_partitioned_tables` for BigQuery destinations only.
+  It defaults to `false`, the API's own default, so existing sinks keep
+  writing dated tables.
 
 ### Changed
-
-- Breaking for BigQuery destinations: `bigquery_use_partitioned_tables`
-  defaults to `true`. An existing BigQuery sink that writes dated tables plans
-  an in-place update and then writes new entries to partitioned tables. Set
-  `bigquery_use_partitioned_tables = false` to keep dated tables. Storage,
-  Pub/Sub and log-bucket sinks plan no change.
 
 - CI: bump actions to their current majors, pin tool versions, and restrict the
   workflow token to `contents: read`.
