@@ -23,6 +23,39 @@ module "logging" {
 }
 ```
 
+### Exclusions and BigQuery
+
+```hcl
+module "logging_bq" {
+  source = "github.com/moveeeax/terraform-google-logging?ref=v1.0.0"
+
+  project_id  = var.project_id
+  name        = "all-to-bigquery"
+  destination = "bigquery.googleapis.com/projects/${var.project_id}/datasets/log_archive"
+
+  exclusions = {
+    "lb-health-checks" = {
+      filter      = "resource.type = \"http_load_balancer\" AND httpRequest.requestUrl : \"/healthz\""
+      description = "Load balancer health checks"
+    }
+    "gke-system-sample" = {
+      # sample() drops 90% of the matching entries and keeps the rest.
+      filter = "resource.type = \"k8s_container\" AND resource.labels.namespace_name = \"kube-system\" AND sample(insertId, 0.9)"
+    }
+  }
+}
+```
+
+The `exclusions` map key becomes the exclusion name. The exclusions belong to
+this sink and only filter what it exports.
+`disabled = true` keeps an exclusion in place without excluding anything.
+
+For BigQuery destinations the sink writes to partitioned tables by default
+(`bigquery_use_partitioned_tables = true`). The provider describes the
+alternative as one dated table per day (`syslog_20170523`); with partitioned
+tables the date suffix is gone and queries need partition syntax instead.
+The setting is ignored for other destinations.
+
 A runnable example lives in [`examples/basic`](examples/basic).
 
 ## Writer identity
@@ -70,6 +103,8 @@ to all of them and cannot be revoked for one sink alone.
 | `unique_writer_identity`           | Whether to create a dedicated writer identity.                             | `bool`   | `true`                   |    no    |
 | `grant_writer_identity_permission` | Whether to grant the writer identity its role on the destination.          | `bool`   | `true`                   |    no    |
 | `description`                      | Description of the log sink.                                               | `string` | `"Managed by Terraform"` |    no    |
+| `exclusions`                       | Entries to drop before export, keyed by exclusion name.                    | `map`    | `{}`                     |    no    |
+| `bigquery_use_partitioned_tables`  | BigQuery destinations only: write to partitioned tables.                   | `bool`   | `true`                   |    no    |
 
 ## Outputs
 

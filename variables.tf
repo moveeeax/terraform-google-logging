@@ -61,6 +61,46 @@ variable "grant_writer_identity_permission" {
   default     = true
 }
 
+variable "exclusions" {
+  description = <<-EOT
+    Log entries the sink drops before export, keyed by exclusion name. Each
+    filter is an advanced log filter; sample() can exclude a fraction of the
+    matching entries. disabled = true keeps the exclusion but stops it from
+    excluding anything. Names are up to 100 letters, digits, underscores,
+    hyphens and periods, starting with a letter or digit.
+  EOT
+  type = map(object({
+    filter      = string
+    description = optional(string)
+    disabled    = optional(bool, false)
+  }))
+  default  = {}
+  nullable = false
+
+  validation {
+    condition     = alltrue([for name in keys(var.exclusions) : can(regex("^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,99}$", name))])
+    error_message = "exclusions keys must be 1-100 letters, digits, underscores, hyphens or periods, starting with a letter or digit."
+  }
+
+  validation {
+    condition     = alltrue([for e in values(var.exclusions) : length(trimspace(e.filter)) > 0])
+    error_message = "Each exclusion filter must be non-empty: an empty filter would match every entry and exclude all logs."
+  }
+}
+
+variable "bigquery_use_partitioned_tables" {
+  description = <<-EOT
+    For BigQuery destinations, whether Cloud Logging writes to partitioned
+    tables instead of one dated table per day (syslog_20170523). Defaults to
+    true. Ignored for other destinations. Changing it on an existing sink makes
+    new entries land in differently named tables, so queries over the dataset
+    have to follow.
+  EOT
+  type        = bool
+  default     = true
+  nullable    = false
+}
+
 variable "description" {
   description = "Description of the log sink."
   type        = string

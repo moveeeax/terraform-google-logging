@@ -162,3 +162,102 @@ run "rejects_destination_with_wrong_service_prefix" {
 
   expect_failures = [var.destination]
 }
+
+# --- exclusions ---------------------------------------------------------------
+
+run "no_exclusions_by_default" {
+  assert {
+    condition     = length(google_logging_project_sink.this.exclusions) == 0
+    error_message = "No exclusion may be sent unless exclusions is set."
+  }
+}
+
+run "exclusions_are_passed_through_with_the_key_as_name" {
+  variables {
+    exclusions = {
+      "lb-health-checks" = {
+        filter      = "resource.type = \"http_load_balancer\" AND httpRequest.requestUrl : \"/healthz\""
+        description = "Load balancer health checks"
+      }
+      "gke-system" = {
+        filter   = "resource.type = \"k8s_container\" AND resource.labels.namespace_name = \"kube-system\""
+        disabled = true
+      }
+    }
+  }
+
+  assert {
+    condition     = length(google_logging_project_sink.this.exclusions) == 2
+    error_message = "Every exclusion must reach the sink."
+  }
+
+  # Map iteration is ordered by key, so gke-system comes first.
+  assert {
+    condition     = google_logging_project_sink.this.exclusions[0].name == "gke-system" && google_logging_project_sink.this.exclusions[0].disabled == true
+    error_message = "The map key must become the exclusion name and disabled must pass through."
+  }
+
+  assert {
+    condition     = google_logging_project_sink.this.exclusions[1].name == "lb-health-checks" && google_logging_project_sink.this.exclusions[1].description == "Load balancer health checks"
+    error_message = "description must pass through."
+  }
+
+  assert {
+    condition     = google_logging_project_sink.this.exclusions[1].disabled == false
+    error_message = "disabled must default to false so a new exclusion actually excludes."
+  }
+}
+
+run "rejects_exclusion_name_with_spaces" {
+  command = plan
+
+  variables {
+    exclusions = { "health checks" = { filter = "httpRequest.requestUrl : \"/healthz\"" } }
+  }
+
+  expect_failures = [var.exclusions]
+}
+
+run "rejects_empty_exclusion_filter" {
+  command = plan
+
+  variables {
+    exclusions = { "everything" = { filter = "  " } }
+  }
+
+  expect_failures = [var.exclusions]
+}
+
+# --- BigQuery options ---------------------------------------------------------
+
+run "bigquery_destination_uses_partitioned_tables_by_default" {
+  variables {
+    destination = "bigquery.googleapis.com/projects/other-project/datasets/log_archive"
+  }
+
+  assert {
+    condition     = google_logging_project_sink.this.bigquery_options[0].use_partitioned_tables == true
+    error_message = "BigQuery sinks must default to partitioned tables."
+  }
+}
+
+run "bigquery_partitioned_tables_can_be_turned_off" {
+  variables {
+    destination                     = "bigquery.googleapis.com/projects/other-project/datasets/log_archive"
+    bigquery_use_partitioned_tables = false
+  }
+
+  assert {
+    condition     = google_logging_project_sink.this.bigquery_options[0].use_partitioned_tables == false
+    error_message = "bigquery_use_partitioned_tables = false must reach the sink."
+  }
+}
+
+run "non_bigquery_destination_sends_no_bigquery_options" {
+  command = plan
+
+  assert {
+    condition     = length(google_logging_project_sink.this.bigquery_options) == 0
+    error_message = "bigquery_options must only be sent for BigQuery destinations."
+  }
+}
