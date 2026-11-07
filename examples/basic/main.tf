@@ -43,6 +43,14 @@ module "logging" {
   destination = "storage.googleapis.com/${google_storage_bucket.logs.name}"
   filter      = "severity >= WARNING"
 
+  # Load balancer health checks are noisy and rarely worth archiving.
+  exclusions = {
+    "lb-health-checks" = {
+      filter      = "resource.type = \"http_load_balancer\" AND httpRequest.requestUrl : \"/healthz\""
+      description = "Load balancer health checks"
+    }
+  }
+
   # grant_writer_identity_permission defaults to true, so the module also binds
   # roles/storage.objectCreator on the bucket above for the sink's writer
   # identity. Without that binding the sink applies cleanly and exports nothing.

@@ -6,6 +6,16 @@ All notable changes to this module are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- `exclusions` input, a map keyed by exclusion name of
+  `{ filter, description, disabled = false }`, rendered as the sink's
+  `exclusions` blocks.
+- `bigquery_use_partitioned_tables` input, rendered as
+  `bigquery_options.use_partitioned_tables` for BigQuery destinations only.
+  It defaults to `false`, the API's own default, so existing sinks keep
+  writing dated tables.
+
 ### Changed
 
 - CI: bump actions to their current majors, pin tool versions, and restrict the

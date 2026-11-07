@@ -23,6 +23,27 @@ resource "google_logging_project_sink" "this" {
   description = var.description
 
   unique_writer_identity = var.unique_writer_identity
+
+  # Excluded entries are dropped before export, so the sink never pays to route
+  # them. The map key becomes the exclusion name.
+  dynamic "exclusions" {
+    for_each = var.exclusions
+    content {
+      name        = exclusions.key
+      filter      = exclusions.value.filter
+      description = exclusions.value.description
+      disabled    = exclusions.value.disabled
+    }
+  }
+
+  # Only BigQuery destinations accept bigquery_options; other destinations get
+  # no block at all.
+  dynamic "bigquery_options" {
+    for_each = length(local.bigquery_match) > 0 ? [1] : []
+    content {
+      use_partitioned_tables = var.bigquery_use_partitioned_tables
+    }
+  }
 }
 
 # A log sink is only half a working export. Cloud Logging creates the sink
